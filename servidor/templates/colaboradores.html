@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block titulo %}Colaboradores | Sala Segura{% endblock %}
+{% block conteudo %}
+<div class="cabecalho-pagina">
+  <h1>Colaboradores</h1>
+  <a class="botao" href="{{ url_for('web.colaborador_novo') }}">+ Novo colaborador</a>
+</div>
+<table>
+  <thead>
+    <tr><th>Nome</th><th>Matrícula</th><th>Tag RFID</th><th>Cargo</th><th>Acesso à sala</th><th>Status</th><th></th></tr>
+  </thead>
+  <tbody>
+  {% for c in colaboradores %}
+    <tr class="{{ '' if c.ativo else 'inativo' }}">
+      <td>{{ c.nome }}</td>
+      <td>{{ c.matricula }}</td>
+      <td><code>{{ c.tag_rfid or '—' }}</code></td>
+      <td>{{ c.cargo or '' }}</td>
+      <td><span class="tag {{ 'verde' if c.acesso_sala else 'cinza' }}">{{ 'Autorizado' if c.acesso_sala else 'Sem acesso' }}</span></td>
+      <td>{{ 'Ativo' if c.ativo else 'Inativo' }}</td>
+      <td class="acoes">
+        <a href="{{ url_for('web.colaborador_editar', cid=c.id) }}">Editar</a>
+        <form method="post" action="{{ url_for('web.colaborador_excluir', cid=c.id) }}"
+              onsubmit="return confirm('Excluir {{ c.nome }}?');">
+          <button class="link perigo">Excluir</button>
+        </form>
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="7" class="vazio">Nenhum colaborador cadastrado.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
