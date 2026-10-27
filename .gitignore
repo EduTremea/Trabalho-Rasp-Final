@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+env/
+venv/
+.venv/
+*.db
+raspberry/cache_colaboradores.json
+raspberry/fila_offline.json
+raspberry/estado_sala.json
+.ipynb_checkpoints/

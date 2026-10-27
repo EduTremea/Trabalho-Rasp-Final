@@ -1,0 +1,6 @@
+requests
+mfrc522
+RPi.GPIO
+spidev
+RPLCD
+smbus2
