@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Sala Segura: documentação do projeto</title>
+<style>
+  @page { size: A4; margin: 20mm 18mm; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color: #1f2937; font-size: 10.5pt; line-height: 1.45; }
+  h1 { font-size: 22pt; margin: 0 0 4px; color: #111827; }
+  h2 { font-size: 14pt; color: #1d4ed8; border-bottom: 2px solid #1d4ed8; padding-bottom: 3px; margin: 22px 0 8px; page-break-after: avoid; }
+  h3 { font-size: 11pt; margin: 14px 0 4px; color: #111827; page-break-after: avoid; }
+  p { margin: 0 0 8px; }
+  table { border-collapse: collapse; width: 100%; margin: 6px 0 10px; font-size: 9.5pt; page-break-inside: avoid; }
+  th, td { border: 1px solid #d1d5db; padding: 4px 7px; text-align: left; vertical-align: top; }
+  th { background: #f3f4f6; }
+  td.num { text-align: right; white-space: nowrap; }
+  .capa { text-align: center; padding-top: 140px; page-break-after: always; }
+  .capa .sub { color: #6b7280; font-size: 13pt; margin-top: 6px; }
+  .capa .meta { margin-top: 60px; color: #374151; }
+  .caixa { background: #f9fafb; border-left: 4px solid #1d4ed8; padding: 8px 12px; margin: 8px 0; }
+  .alerta { background: #fef3c7; border-left: 4px solid #b45309; padding: 8px 12px; margin: 8px 0; }
+  figure { margin: 10px 0; text-align: center; page-break-inside: avoid; }
+  figure img { max-width: 100%; border: 1px solid #e5e7eb; }
+  figcaption { font-size: 9pt; color: #6b7280; margin-top: 4px; }
+  .duas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  ul { margin: 0 0 8px; padding-left: 20px; }
+  li { margin-bottom: 2px; }
+  code { font-family: Consolas, monospace; background: #f3f4f6; padding: 0 3px; font-size: 9.5pt; }
+  .fonte { font-size: 8.5pt; color: #6b7280; }
+  .quebra { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<div class="capa">
+  <h1>Sala Segura</h1>
+  <div class="sub">Controle de acesso com RFID para sala de projeto sob NDA</div>
+  <div class="meta">
+    <p><strong>Hardware Architecture</strong> · Atitus · 2026.1<br>Prof. Me. Fernando P. Pinheiro</p>
+    <p style="margin-top:30px">Luiz Eduardo Tremea · Bruno Benetti · Patrick M.</p>
+    <p>Outubro de 2026</p>
+  </div>
+</div>
+
+<h2>1. Identificação da equipe</h2>
+<table>
+  <tr><th>Integrante</th><th>Função</th><th>Responsabilidades</th></tr>
+  <tr><td>Luiz Eduardo Tremea</td><td>Sistema embarcado</td><td>Código da Raspberry Pi (leitura RFID, atuadores, sensores opcionais), cache local e fila offline, montagem física e integração com a API.</td></tr>
+  <tr><td>Bruno Benetti</td><td>Backend e web</td><td>Servidor Flask, banco SQLite, API REST, painel de gestão com login, página de monitoramento em tempo real e exportação CSV.</td></tr>
+  <tr><td>Patrick M.</td><td>Dados e documentação</td><td>Gerador de dados de teste, notebook Pandas, documentação técnica e apresentação.</td></tr>
+</table>
+<p class="fonte">Divisão sugerida a partir da estrutura do repositório. Ajustar conforme a divisão real do grupo.</p>
+
+<h2>2. Sumário executivo</h2>
+<p>Um estúdio de jogos precisa restringir e auditar o acesso a uma sala onde ficam materiais de uma publisher sob NDA. O Sala Segura resolve isso com um leitor RFID ligado a uma Raspberry Pi na porta, que valida o crachá, aciona LEDs, buzzer, display e fechadura, e envia cada evento para um servidor Flask. O servidor concentra os dados em um banco SQLite, oferece um painel para cadastrar colaboradores e permissões, uma página de monitoramento para a empresa de segurança e uma exportação em CSV/API que alimenta a análise em Pandas. A Raspberry continua validando acessos mesmo sem rede, usando um cache local, e sincroniza os registros quando a conexão volta.</p>
+
+<h2>3. Objetivo geral</h2>
+<p>Controlar fisicamente quem entra na sala do projeto e registrar todas as tentativas de acesso, autorizadas ou não, de forma que o estúdio consiga comprovar à publisher o cumprimento do NDA e investigar qualquer incidente.</p>
+
+<h2>4. Objetivos específicos</h2>
+<ul>
+  <li>Ler a tag RFID do crachá e validar cadastro e permissão localmente na Raspberry.</li>
+  <li>Distinguir entrada e saída e medir o tempo diário de permanência de cada colaborador.</li>
+  <li>Registrar tentativas de colaboradores sem permissão e de tags desconhecidas, com feedback distinto em LEDs, buzzer e LCD.</li>
+  <li>Centralizar os eventos em um servidor com banco de dados e API.</li>
+  <li>Permitir que um usuário autenticado cadastre, edite, exclua colaboradores e defina permissões.</li>
+  <li>Exibir em tempo real, para a empresa de segurança, quem está na sala e os alertas recentes.</li>
+  <li>Continuar operando sem rede e sincronizar depois.</li>
+  <li>Responder, com Pandas, as perguntas de auditoria do enunciado a partir dos logs.</li>
+</ul>
+
+<h2>5. Descrição do produto final</h2>
+<p>Na versão completa, cada porta protegida tem um módulo com leitor RFID, display, fechadura eletromagnética e sensor de porta aberta. Os módulos se comunicam com um servidor central por rede cabeada ou Wi-Fi corporativa, com TLS e autenticação por certificado. O servidor usa um banco relacional com backup, perfis de usuário (administrador, gestor, segurança), trilha de auditoria de quem alterou permissões, e integra com o sistema de RH para desativar crachás de desligados automaticamente. A empresa de segurança recebe alertas por push e e-mail, e os relatórios de permanência e tentativas são gerados automaticamente por período.</p>
+
+<h2>6. Descrição do MVP</h2>
+<p>O MVP cobre o fluxo completo em escala de bancada, com uma porta e três módulos de software:</p>
+<table>
+  <tr><th>Módulo</th><th>Tecnologia</th><th>O que faz</th></tr>
+  <tr><td><code>raspberry/</code></td><td>Python, RPi.GPIO, mfrc522, RPLCD, requests</td><td>Lê o crachá, valida pelo cache, aciona LEDs/buzzer/LCD/fechadura, trata PIR, botão e LDR, envia eventos e mantém fila offline. Tem modo <code>--simular</code> que roda sem hardware.</td></tr>
+  <tr><td><code>servidor/</code></td><td>Flask, SQLite, Jinja, JS (polling)</td><td>API para a Rasp (sync, eventos, heartbeat), login, CRUD de colaboradores, logs com filtro, monitoramento em tempo real e exportação CSV.</td></tr>
+  <tr><td><code>analise/</code></td><td>Pandas, Matplotlib, Jupyter</td><td>Lê a API ou o CSV e responde as seis perguntas do enunciado, com gráficos por dia e por hora.</td></tr>
+</table>
+<p>Fora do MVP: múltiplas portas, HTTPS, perfis de usuário, integração com RH e notificações externas.</p>
+
+<h2>7. Problema e solução</h2>
+<p><strong>Problema.</strong> O material da publisher não pode vazar. Uma porta com chave comum não registra quem entrou, não diferencia funcionários do projeto dos demais e não gera evidência para auditoria. O estúdio também precisa que uma empresa de segurança terceirizada acompanhe a sala sem ter acesso ao cadastro de pessoas.</p>
+<p><strong>Solução.</strong> O crachá RFID identifica cada pessoa. A Raspberry na porta decide na hora, com base no cadastro sincronizado, se libera ou não, e dá um retorno visual e sonoro diferente para cada caso. Tudo vira evento com data e hora no servidor. O painel de gestão fica com o estúdio; a página de monitoramento mostra à segurança apenas o que ela precisa: quem está dentro, entradas, saídas e alertas. Os logs em CSV permitem auditoria posterior com Pandas.</p>
+
+<h2>8. Projetos similares</h2>
+<table>
+  <tr><th>Projeto</th><th>Tipo</th><th>Relação com o Sala Segura</th></tr>
+  <tr><td>Control iD iDAccess</td><td>Comercial</td><td>Controlador de acesso com biometria, cartão MIFARE/125 kHz e senha, mais de 200 mil registros, regras por grupo e horário e software de gestão embarcado acessível pelo navegador. É a referência de "produto final" para o nosso painel.</td></tr>
+  <tr><td>Intelbras SS 3430 MF Bio</td><td>Comercial</td><td>Controlador de acesso RFID 13,56 MHz com biometria. Listado a R$ 1.689,38 na KaBuM em out/2026, o que dá a ordem de grandeza do custo de uma solução pronta por porta.</td></tr>
+  <tr><td>Expansão e adaptação de fechaduras eletrônicas do DCC (Felipe Mingote, UFMG, 2021)</td><td>Acadêmico</td><td>Fechaduras de laboratório com leitores RFID, registro de acessos, banco centralizado e gestão em Python/Flask com Bootstrap, onde professores concedem ou revogam permissões. Mesma pilha de software que a nossa.</td></tr>
+  <tr><td>Sistema de controle de acesso via RFID/NFC (Breno Cordeiro Bispo, UFPE, 2019)</td><td>Acadêmico</td><td>Leitor em ESP32 com PN532, servidor MySQL, broker MQTT e Node-RED, além de app Android que usa o celular como cartão NFC. Mostra a alternativa AMQP/MQTT que o enunciado cita.</td></tr>
+</table>
+
+<h2>9. Custo estimado</h2>
+<h3>MVP (uma porta, componentes de prototipagem)</h3>
+<table>
+  <tr><th>Item</th><th>Loja consultada (out/2026)</th><th class="num">Preço</th></tr>
+  <tr><td>Raspberry Pi 4 Model B 4 GB</td><td>MakerHero ("a partir de")</td><td class="num">R$ 491,90</td></tr>
+  <tr><td>Kit leitor RFID MFRC522 + cartão + chaveiro</td><td>Eletrogate</td><td class="num">R$ 14,90</td></tr>
+  <tr><td>Display LCD 16x2 com I2C</td><td>Eletrogate</td><td class="num">R$ 29,90</td></tr>
+  <tr><td>Módulo relé 5 V 1 canal</td><td>Eletrogate</td><td class="num">R$ 7,50</td></tr>
+  <tr><td>Micro servo SG90 (alternativa ao relé)</td><td>Usinainfo</td><td class="num">R$ 17,33</td></tr>
+  <tr><td>Sensor de presença PIR HC-SR501</td><td>Eletrogate</td><td class="num">R$ 11,90</td></tr>
+  <tr><td>Módulo sensor de luminosidade LDR</td><td>Eletrogate</td><td class="num">R$ 5,90</td></tr>
+  <tr><td>Buzzer passivo 5 V</td><td>Eletrogate</td><td class="num">R$ 1,90</td></tr>
+  <tr><td>Protoboard 400 pontos</td><td>Eletrogate</td><td class="num">R$ 8,90</td></tr>
+  <tr><td>LEDs, resistores, botão e jumpers</td><td>já disponíveis no kit da disciplina</td><td class="num">—</td></tr>
+  <tr><th colspan="2">Total aproximado do MVP (com relé e servo)</th><th class="num">R$ 590,13</th></tr>
+</table>
+<p class="fonte">Não estão incluídos cartão microSD, fonte e o computador que roda o servidor, que o grupo já possui. Os preços variam por loja e estoque; a Raspberry Pi 4 4 GB apareceu também a R$ 944,84 na NextPi, fora de estoque.</p>
+
+<h3>Projeção do produto final</h3>
+<p>Por porta, uma solução comercial pronta como o Intelbras SS 3430 MF Bio custa cerca de R$ 1.690, e o Control iD iDTouch (teclado e RFID) R$ 285,90 na KaBuM, sem a fechadura eletromagnética, a fonte e a instalação. Mantendo a nossa arquitetura, o custo por porta cai para a faixa do MVP, mas somam-se: fechadura eletromagnética e fonte dedicada, caixa para o módulo, cabeamento, servidor com backup (ou nuvem) e horas de desenvolvimento para HTTPS, perfis, integração com RH e notificações. A economia por porta compensa a partir de algumas unidades; para uma porta só, o produto comercial é mais barato no total.</p>
+
+<h2>10. Arquitetura geral e funcionamento</h2>
+<figure>
+<svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial" font-size="12">
+  <defs><marker id="seta" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#374151"/></marker></defs>
+  <!-- Porta -->
+  <rect x="15" y="20" width="230" height="290" rx="8" fill="#eff6ff" stroke="#1d4ed8"/>
+  <text x="130" y="42" text-anchor="middle" font-weight="bold" fill="#1d4ed8">PORTA DA SALA</text>
+  <rect x="35" y="60" width="190" height="60" rx="6" fill="#fff" stroke="#374151"/>
+  <text x="130" y="84" text-anchor="middle" font-weight="bold">Raspberry Pi 4</text>
+  <text x="130" y="102" text-anchor="middle" fill="#6b7280">main.py · cache · fila offline</text>
+  <rect x="35" y="140" width="88" height="34" rx="4" fill="#fff" stroke="#9ca3af"/><text x="79" y="161" text-anchor="middle">RFID RC522</text>
+  <rect x="137" y="140" width="88" height="34" rx="4" fill="#fff" stroke="#9ca3af"/><text x="181" y="161" text-anchor="middle">LCD 16x2</text>
+  <rect x="35" y="184" width="88" height="34" rx="4" fill="#fff" stroke="#9ca3af"/><text x="79" y="205" text-anchor="middle">LEDs + buzzer</text>
+  <rect x="137" y="184" width="88" height="34" rx="4" fill="#fff" stroke="#9ca3af"/><text x="181" y="205" text-anchor="middle">relé / servo</text>
+  <rect x="35" y="228" width="88" height="34" rx="4" fill="#fff" stroke="#9ca3af" stroke-dasharray="4 2"/><text x="79" y="249" text-anchor="middle">PIR · botão</text>
+  <rect x="137" y="228" width="88" height="34" rx="4" fill="#fff" stroke="#9ca3af" stroke-dasharray="4 2"/><text x="181" y="249" text-anchor="middle">LDR</text>
+  <text x="130" y="290" text-anchor="middle" fill="#6b7280" font-size="10">tracejado = opcional</text>
+  <!-- HTTP -->
+  <line x1="245" y1="90" x2="300" y2="90" stroke="#374151" stroke-width="2" marker-end="url(#seta)"/>
+  <line x1="300" y1="110" x2="245" y2="110" stroke="#374151" stroke-width="2" marker-end="url(#seta)"/>
+  <text x="272" y="80" text-anchor="middle" font-size="10">POST eventos</text>
+  <text x="272" y="126" text-anchor="middle" font-size="10">GET sync</text>
+  <text x="272" y="140" text-anchor="middle" font-size="10" fill="#6b7280">HTTP / Wi-Fi</text>
+  <!-- Servidor -->
+  <rect x="305" y="20" width="230" height="290" rx="8" fill="#f0fdf4" stroke="#15803d"/>
+  <text x="420" y="42" text-anchor="middle" font-weight="bold" fill="#15803d">SERVIDOR (notebook)</text>
+  <rect x="325" y="60" width="190" height="60" rx="6" fill="#fff" stroke="#374151"/>
+  <text x="420" y="84" text-anchor="middle" font-weight="bold">Flask</text>
+  <text x="420" y="102" text-anchor="middle" fill="#6b7280">api.py · web.py</text>
+  <rect x="325" y="150" width="190" height="44" rx="6" fill="#fff" stroke="#374151"/>
+  <text x="420" y="170" text-anchor="middle" font-weight="bold">SQLite</text>
+  <text x="420" y="186" text-anchor="middle" fill="#6b7280" font-size="10">usuarios · colaboradores · eventos</text>
+  <line x1="420" y1="120" x2="420" y2="150" stroke="#374151" stroke-width="2" marker-end="url(#seta)"/>
+  <rect x="325" y="220" width="190" height="60" rx="6" fill="#fff" stroke="#374151"/>
+  <text x="420" y="242" text-anchor="middle" font-weight="bold">Painel web</text>
+  <text x="420" y="258" text-anchor="middle" fill="#6b7280" font-size="10">login · colaboradores · logs</text>
+  <text x="420" y="272" text-anchor="middle" fill="#6b7280" font-size="10">monitoramento (polling 3 s)</text>
+  <line x1="420" y1="194" x2="420" y2="220" stroke="#374151" stroke-width="2" marker-end="url(#seta)"/>
+  <!-- Usuarios -->
+  <rect x="580" y="60" width="165" height="50" rx="6" fill="#fff" stroke="#9ca3af"/>
+  <text x="662" y="80" text-anchor="middle" font-weight="bold">Gestor do estúdio</text>
+  <text x="662" y="96" text-anchor="middle" fill="#6b7280" font-size="10">cadastro e permissões</text>
+  <rect x="580" y="130" width="165" height="50" rx="6" fill="#fff" stroke="#9ca3af"/>
+  <text x="662" y="150" text-anchor="middle" font-weight="bold">Empresa de segurança</text>
+  <text x="662" y="166" text-anchor="middle" fill="#6b7280" font-size="10">monitoramento em tempo real</text>
+  <rect x="580" y="220" width="165" height="60" rx="6" fill="#fff" stroke="#9ca3af"/>
+  <text x="662" y="242" text-anchor="middle" font-weight="bold">Notebook Pandas</text>
+  <text x="662" y="258" text-anchor="middle" fill="#6b7280" font-size="10">GET /api/eventos.csv</text>
+  <text x="662" y="272" text-anchor="middle" fill="#6b7280" font-size="10">ou dados/acessos.csv</text>
+  <line x1="535" y1="250" x2="578" y2="250" stroke="#374151" stroke-width="2" marker-end="url(#seta)"/>
+  <line x1="578" y1="85" x2="535" y2="235" stroke="#9ca3af" stroke-width="1.5"/>
+  <line x1="578" y1="155" x2="535" y2="245" stroke="#9ca3af" stroke-width="1.5"/>
+</svg>
+<figcaption>Figura 1. Arquitetura do MVP. A Raspberry decide o acesso localmente; o servidor é a fonte única dos dados.</figcaption>
+</figure>
+
+<h3>Fluxo de uma leitura</h3>
+<ol>
+  <li>O MFRC522 entrega o ID da tag. Leituras repetidas em menos de 3 s são ignoradas.</li>
+  <li>O ID é procurado no cache local (<code>cache_colaboradores.json</code>), baixado de <code>GET /api/sync</code> ao ligar e a cada 60 s.</li>
+  <li>Tag desconhecida gera <code>invasao</code>; cadastrado sem permissão gera <code>acesso_negado</code>; autorizado gera <code>entrada</code> ou <code>saida</code>, alternando a cada leitura. A saída carrega a duração da visita e o LCD mostra o total do dia.</li>
+  <li>O evento vai por <code>POST /api/eventos</code>. Se falhar, entra em <code>fila_offline.json</code> e é reenviado no próximo heartbeat bem-sucedido. O servidor tem chave única (data_hora, tipo, tag) e descarta duplicatas.</li>
+  <li>O servidor resolve o colaborador pela tag, grava em <code>eventos</code> e a página de monitoramento reflete em até 3 s.</li>
+</ol>
+
+<h3>Perda de conexão</h3>
+<div class="caixa">
+<p>A Rasp nunca depende do servidor para decidir: a validação é sempre pelo cache. Sem rede, os eventos ficam em arquivo (gravação atômica, sobrevive a queda de energia) e o estado de quem está dentro fica em <code>estado_sala.json</code>. O heartbeat a cada 10 s detecta a volta da rede e descarrega a fila. O monitoramento mostra "Raspberry offline" e a quantidade de eventos pendentes.</p>
+<p><strong>Limitações:</strong> alterações de cadastro feitas no painel durante a queda só chegam na próxima sincronização; se a Rasp reiniciar sem rede e sem cache, toda tag é tratada como desconhecida; o relógio da Rasp precisa estar certo para os horários baterem.</p>
+</div>
+
+<h3>Ligações (modo BOARD)</h3>
+<table>
+  <tr><th>Componente</th><th>Pino físico</th><th>Observação</th></tr>
+  <tr><td>RFID SDA / SCK / MOSI / MISO / RST</td><td>24 / 23 / 19 / 21 / 22</td><td>SPI; alimentação em 3,3 V (pino 1), GND pino 6</td></tr>
+  <tr><td>LED verde / LED vermelho</td><td>11 / 13</td><td>resistor 220 a 330 Ω</td></tr>
+  <tr><td>Buzzer passivo</td><td>12</td><td>PWM por software, tons diferentes por evento</td></tr>
+  <tr><td>Relé ou servo (fechadura)</td><td>15</td><td>relé ativo em nível baixo; servo em 5 V</td></tr>
+  <tr><td>PIR (OUT) / botão / LDR (DO)</td><td>16 / 18 / 29</td><td>opcionais; botão para GND com pull-up interno</td></tr>
+  <tr><td>LCD 16x2 I2C</td><td>3 (SDA) / 5 (SCL)</td><td>endereço 0x27 ou 0x3F</td></tr>
+</table>
+
+<h2>11. Imagens do MVP</h2>
+<div class="alerta">Inserir aqui as fotos reais da montagem (Raspberry, protoboard, leitor e display) antes de gerar o PDF final.</div>
+<figure><img src="imagens/tela_monitoramento.png" alt="Monitoramento"><figcaption>Figura 2. Página de monitoramento para a empresa de segurança, com dados de teste.</figcaption></figure>
+<div class="duas">
+  <figure><img src="imagens/tela_colaboradores.png" alt="Colaboradores"><figcaption>Figura 3. Gestão de colaboradores e permissões.</figcaption></figure>
+  <figure><img src="imagens/tela_logs.png" alt="Logs"><figcaption>Figura 4. Logs com filtro por data e tipo e exportação CSV.</figcaption></figure>
+</div>
+
+<h2>12. Principais riscos e o que falta para a versão completa</h2>
+<table>
+  <tr><th>Risco / lacuna</th><th>Impacto</th><th>Mitigação ou próximo passo</th></tr>
+  <tr><td>Crachá clonado ou emprestado</td><td>Acesso indevido com registro em nome de outra pessoa</td><td>Segundo fator (senha ou biometria) e cartões MIFARE com autenticação, como nos produtos comerciais.</td></tr>
+  <tr><td>Tráfego HTTP sem criptografia e chave de API fixa</td><td>Eventos podem ser forjados na rede local</td><td>HTTPS com certificado, chave por dispositivo, rede segregada.</td></tr>
+  <tr><td>Saída sem passar o crachá</td><td>Tempo de permanência errado e "fantasmas" na sala</td><td>Sensor de porta e PIR interno para fechar a visita automaticamente; alerta ao gestor.</td></tr>
+  <tr><td>Servidor único em um notebook</td><td>Fica sem monitoramento e sem histórico se o notebook desligar</td><td>Servidor dedicado ou nuvem, backup diário do banco, PostgreSQL.</td></tr>
+  <tr><td>Dados pessoais (nome, matrícula, horários)</td><td>Obrigações da LGPD</td><td>Perfis de acesso, trilha de auditoria, política de retenção dos logs.</td></tr>
+  <tr><td>Equipe e equipamento</td><td>Uma porta só, componentes de bancada</td><td>Fechadura eletromagnética, caixa para o módulo, cabeamento e um desenvolvedor dedicado por 2 a 3 meses para os itens acima.</td></tr>
+</table>
+
+<h2>Referências</h2>
+<ul class="fonte">
+  <li>Control iD. iDAccess. https://controlid.com.br/en/access-control/idaccess</li>
+  <li>KaBuM. Controlador de Acesso Intelbras SS 3430 MF Bio. https://www.kabum.com.br/produto/508338/ (consultado em 26/10/2026)</li>
+  <li>KaBuM. Controle de Acesso iDTouch Control iD. https://www.kabum.com.br/produto/210215/ (consultado em 26/10/2026)</li>
+  <li>MINGOTE, F. L. Expansão e adaptação de fechaduras eletrônicas do DCC. UFMG, 2021. https://monografias.dcc.ufmg.br/wp-content/uploads/Monografia_2_Final-Felipe-Louzada-Mingote.pdf</li>
+  <li>BISPO, B. C. Sistema de controle de acesso via RFID/NFC. UFPE, 2019. https://repositorio.ufpe.br/bitstream/123456789/46991/1/</li>
+  <li>MakerHero, Eletrogate e Usinainfo: páginas dos produtos listados na seção 9 (consultadas em 26/10/2026).</li>
+</ul>
+
+</body>
+</html>
