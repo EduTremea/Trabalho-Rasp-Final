@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block titulo %}Monitoramento | Sala Segura{% endblock %}
+{% block conteudo %}
+<div class="cabecalho-pagina">
+  <h1>Monitoramento em tempo real</h1>
+  <div class="estado-dispositivo">
+    <span id="disp-online" class="ponto"></span>
+    <span id="disp-texto">conectando...</span>
+    <span id="disp-luz" class="tag cinza" hidden></span>
+    <span id="relogio" class="relogio"></span>
+  </div>
+</div>
+
+<section class="resumo">
+  <div class="card"><div class="numero" id="n-dentro">0</div><div>na sala agora</div></div>
+  <div class="card"><div class="numero" id="n-entradas">0</div><div>entradas hoje</div></div>
+  <div class="card"><div class="numero" id="n-saidas">0</div><div>saídas hoje</div></div>
+  <div class="card alerta"><div class="numero" id="n-negados">0</div><div>acessos negados hoje</div></div>
+  <div class="card perigo"><div class="numero" id="n-invasoes">0</div><div>invasões hoje</div></div>
+</section>
+
+<div class="grade">
+  <section class="painel">
+    <h2>Colaboradores na sala</h2>
+    <ul id="lista-dentro" class="lista"></ul>
+  </section>
+  <section class="painel perigo">
+    <h2>Alertas recentes</h2>
+    <ul id="lista-alertas" class="lista"></ul>
+  </section>
+  <section class="painel">
+    <h2>Últimas entradas autorizadas</h2>
+    <ul id="lista-entradas" class="lista"></ul>
+  </section>
+  <section class="painel">
+    <h2>Últimas saídas</h2>
+    <ul id="lista-saidas" class="lista"></ul>
+  </section>
+  <section class="painel alerta">
+    <h2>Tentativas de colaboradores sem autorização</h2>
+    <ul id="lista-negados" class="lista"></ul>
+  </section>
+  <section class="painel perigo">
+    <h2>Tentativas de invasão (tag desconhecida)</h2>
+    <ul id="lista-invasoes" class="lista"></ul>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='monitor.js') }}"></script>
+{% endblock %}

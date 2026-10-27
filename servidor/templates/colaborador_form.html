@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block titulo %}{{ 'Editar' if c else 'Novo' }} colaborador | Sala Segura{% endblock %}
+{% block conteudo %}
+<h1>{{ 'Editar colaborador' if c else 'Novo colaborador' }}</h1>
+<form method="post" class="formulario">
+  <label>Nome <input name="nome" value="{{ c.nome if c else '' }}" required></label>
+  <label>Matrícula <input name="matricula" value="{{ c.matricula if c else '' }}" required></label>
+  <label>Tag RFID
+    <input name="tag_rfid" value="{{ c.tag_rfid or '' if c else '' }}" placeholder="ID impresso pela Raspberry ao ler o crachá">
+  </label>
+  <label>Cargo / função <input name="cargo" value="{{ c.cargo or '' if c else '' }}"></label>
+  <label class="check"><input type="checkbox" name="acesso_sala" {{ 'checked' if c and c.acesso_sala }}> Possui acesso à sala do projeto</label>
+  <label class="check"><input type="checkbox" name="ativo" {{ 'checked' if (c and c.ativo) or not c }}> Ativo</label>
+  <div class="botoes">
+    <button type="submit">Salvar</button>
+    <a class="botao secundario" href="{{ url_for('web.colaboradores') }}">Cancelar</a>
+  </div>
+</form>
+<p class="dica">Depois de salvar, a Raspberry recebe o cadastro novo na próxima sincronização (a cada 60 s ou ao reiniciar).</p>
+{% endblock %}

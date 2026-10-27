@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Sala Segura{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="topo">
+  <div class="marca">Sala Segura <span>controle de acesso NDA</span></div>
+  {% if session.usuario %}
+  <nav>
+    <a href="{{ url_for('web.monitoramento') }}" class="{{ 'ativo' if request.endpoint == 'web.monitoramento' }}">Monitoramento</a>
+    <a href="{{ url_for('web.colaboradores') }}" class="{{ 'ativo' if request.endpoint and request.endpoint.startswith('web.colaborador') }}">Colaboradores</a>
+    <a href="{{ url_for('web.logs') }}" class="{{ 'ativo' if request.endpoint == 'web.logs' }}">Logs</a>
+    <a href="{{ url_for('web.logout') }}" class="sair">Sair ({{ session.usuario }})</a>
+  </nav>
+  {% endif %}
+</header>
+<main>
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% for cat, m in msgs %}<div class="aviso {{ cat }}">{{ m }}</div>{% endfor %}
+  {% endwith %}
+  {% block conteudo %}{% endblock %}
+</main>
+{% block scripts %}{% endblock %}
+</body>
+</html>
