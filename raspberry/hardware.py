@@ -141,12 +141,21 @@ class HardwareReal:
             GPIO.setup(config.LDR_PINO, GPIO.IN)
         self._ultimo_botao = 0
 
-        # Display LCD I2C
+        # Display LCD 16x2 (direto nos GPIOs em 4 bits, ou por modulo I2C)
         self.display = None
         if config.LCD_ATIVO:
             try:
-                from RPLCD.i2c import CharLCD
-                self.display = CharLCD("PCF8574", config.LCD_ENDERECO, cols=16, rows=2)
+                if config.LCD_MODO == "i2c":
+                    from RPLCD.i2c import CharLCD
+                    self.display = CharLCD("PCF8574", config.LCD_ENDERECO, cols=16, rows=2)
+                else:
+                    from RPLCD.gpio import CharLCD
+                    self.display = CharLCD(
+                        numbering_mode=GPIO.BOARD, cols=16, rows=2,
+                        pin_rs=config.LCD_RS, pin_e=config.LCD_E, pin_rw=None,  # RW vai no GND
+                        pins_data=[config.LCD_D4, config.LCD_D5, config.LCD_D6, config.LCD_D7],
+                        compat_mode=True,  # deixa a escrita mais lenta, evita caracteres trocados
+                    )
                 self.display.clear()
             except Exception as e:  # sem display nao pode travar o resto
                 print(f"[LCD] nao encontrado ({e}); seguindo sem display")
@@ -226,8 +235,10 @@ class HardwareReal:
         if self.servo:
             self.servo.stop()
         if self.display:
-            self.display.clear()
-            self.display.close(clear=True)
+            try:
+                self.display.close(clear=True)  # no modo gpio isso ja faz parte do cleanup
+            except Exception:
+                pass
         GPIO.cleanup()
 
 

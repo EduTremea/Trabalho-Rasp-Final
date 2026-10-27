@@ -32,8 +32,17 @@ BOTAO_PINO = 18              # GPIO24, botao para o GND com pull-up interno (Non
 LDR_PINO = 29                # GPIO5, saida digital (DO) do modulo LDR (None para desativar)
 LDR_ESCURO_NIVEL = 1         # nivel que o modulo entrega quando esta escuro (ajuste no trimpot)
 
-LCD_ATIVO = True             # display 16x2 por I2C (pinos 3 = SDA, 5 = SCL)
-LCD_ENDERECO = 0x27          # use `i2cdetect -y 1` para confirmar (0x27 ou 0x3F)
+LCD_ATIVO = True             # display 16x2 (HD44780 / 1602A)
+LCD_MODO = "gpio"            # "gpio" = 16 pinos direto (modo 4 bits) | "i2c" = com modulo I2C atras
+# Modo gpio: pinos fisicos (BOARD) ligados no LCD
+LCD_RS = 31                  # GPIO6
+LCD_E = 33                   # GPIO13
+LCD_D4 = 35                  # GPIO19
+LCD_D5 = 37                  # GPIO26
+LCD_D6 = 38                  # GPIO20
+LCD_D7 = 40                  # GPIO21
+# Modo i2c: endereco do modulo (use `i2cdetect -y 1`: 0x27 ou 0x3F)
+LCD_ENDERECO = 0x27
 
 # ---------- Comportamento ----------
 TEMPO_ANTIRREPETICAO = 3     # segundos para ignorar o mesmo cracha

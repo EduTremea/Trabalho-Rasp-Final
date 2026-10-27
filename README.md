@@ -68,7 +68,7 @@ Descubra o IP com `ipconfig` (Windows) ou `hostname -I` (Linux). Libere a porta 
 ### 2. Raspberry Pi
 
 ```bash
-sudo raspi-config         # Interface Options: ativar SPI e I2C
+sudo raspi-config         # Interface Options: ativar SPI
 cd raspberry
 python -m venv env --system-site-packages && source env/bin/activate
 pip install -r requirements.txt
@@ -101,10 +101,11 @@ jupyter notebook analise_acessos.ipynb
 | Sensor PIR (OUT) | 16 | 23 |
 | Botão (para GND, pull-up interno) | 18 | 24 |
 | LDR módulo (DO) | 29 | 5 |
-| LCD I2C SDA / SCL | 3 / 5 | 2 / 3 |
+| LCD RS / E / D4 / D5 / D6 / D7 | 31 / 33 / 35 / 37 / 38 / 40 | 6 / 13 / 19 / 26 / 20 / 21 |
+| LCD VDD e BLA / GND, RW e BLK | 5 V (pino 4) / GND (pino 39) | |
 | GND comum | 9 | |
 
-LEDs com resistor de 220 a 330 Ω. O RFID vai no 3,3 V; o LCD, relé, PIR e LDR no 5 V (pino 2 ou 4). Servo em 5 V com GND comum.
+LEDs com resistor de 220 a 330 Ω. O RFID e o LDR vão no 3,3 V; o LCD, relé e PIR no 5 V (pino 2 ou 4). O LCD 1602A está ligado direto em 4 bits (sem módulo I2C), com o VO no cursor de um potenciômetro de 10 kΩ ou no GND. Servo em 5 V com GND comum.
 
 ## API
 
