@@ -59,8 +59,8 @@ sala-segura/
 cd servidor
 python -m venv env && source env/bin/activate     # Windows: env\Scripts\activate
 pip install -r requirements.txt
-python seed.py            # cria admin/admin123 e colaboradores de exemplo
-python app.py             # http://<ip-do-notebook>:5000
+python seed.py            # opcional: colaboradores de exemplo
+python app.py             # http://<ip>:5000, login admin / admin
 ```
 
 Descubra o IP com `ipconfig` (Windows) ou `hostname -I` (Linux). Libere a porta 5000 no firewall se precisar.

@@ -79,3 +79,4 @@ label.check { display: flex; align-items: center; gap: 8px; color: var(--texto);
 .lista li { padding: 7px 0; border-bottom: 1px solid var(--borda); font-size: .93rem; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .lista li:last-child { border-bottom: 0; }
 .lista li small { margin-left: auto; }
+.lista a.cadastrar { font-size: .8rem; font-weight: 600; background: #1d4ed8; color: #fff; padding: 2px 8px; border-radius: 4px; text-decoration: none; }

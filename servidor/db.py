@@ -68,7 +68,17 @@ def close_db(e=None):
 def init_db():
     db = get_db()
     db.executescript(SCHEMA)
+    garantir_admin(db)
     db.commit()
+
+
+def garantir_admin(db):
+    """Cria o usuario admin se ainda nao existir, para o painel ja abrir com login."""
+    from werkzeug.security import generate_password_hash
+    usuario = current_app.config["ADMIN_USUARIO"]
+    if db.execute("SELECT 1 FROM usuarios WHERE usuario = ?", (usuario,)).fetchone() is None:
+        db.execute("INSERT INTO usuarios (usuario, senha_hash) VALUES (?, ?)",
+                   (usuario, generate_password_hash(current_app.config["ADMIN_SENHA"])))
 
 
 def init_app(app):

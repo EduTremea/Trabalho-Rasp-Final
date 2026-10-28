@@ -85,7 +85,7 @@ async function atualizar() {
     e => `<strong>${e.nome || "?"}</strong> <small>${hora(e.data_hora)}</small>`,
     "Nenhuma tentativa");
   preencher("lista-invasoes", d.invasoes,
-    e => `tag <code>${e.tag_rfid}</code> <small>${hora(e.data_hora)}</small>`,
+    e => `tag <code>${e.tag_rfid}</code> <a class="cadastrar" href="/colaboradores/novo?tag=${encodeURIComponent(e.tag_rfid)}">Cadastrar</a> <small>${hora(e.data_hora)}</small>`,
     "Nenhuma tentativa");
 }
 

@@ -80,7 +80,8 @@ def colaborador_novo():
             return redirect(url_for("web.colaboradores"))
         except sqlite3.IntegrityError:
             flash("Matrícula ou tag RFID já cadastrada.", "erro")
-    return render_template("colaborador_form.html", c=None)
+    # Vem do botao "Cadastrar" do monitoramento com a tag ja preenchida
+    return render_template("colaborador_form.html", c=None, tag=request.args.get("tag", ""))
 
 
 @bp_web.route("/colaboradores/<int:cid>/editar", methods=["GET", "POST"])

@@ -10,9 +10,9 @@ SECRET_KEY = os.environ.get("SALA_SECRET_KEY", "troque-esta-chave")
 # Chave que a Raspberry envia no cabecalho X-Api-Key
 API_KEY = os.environ.get("SALA_API_KEY", "rasp-sala-2026")
 
-# Usuario inicial do painel (criado pelo seed.py)
+# Usuario do painel, criado automaticamente ao subir o servidor
 ADMIN_USUARIO = "admin"
-ADMIN_SENHA = "admin123"
+ADMIN_SENHA = "admin"
 
 # Tempo (segundos) sem heartbeat para considerar a Raspberry offline
 TIMEOUT_DISPOSITIVO = 30

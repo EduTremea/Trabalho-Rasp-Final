@@ -95,6 +95,13 @@ class SalaSegura:
         momento = agora_iso()
         colab = self.api.colaboradores.get(tag)
 
+        # Tag desconhecida: pode ter sido cadastrada agora no painel, entao
+        # busca o cadastro no servidor antes de tratar como invasao
+        if colab is None and self.api.online:
+            self.api.sincronizar()
+            self.t_sync = time.time()
+            colab = self.api.colaboradores.get(tag)
+
         # 1) Tag que nao esta no cadastro: possivel invasao
         if colab is None:
             print(f"Identificação não encontrada! (ID {tag})")

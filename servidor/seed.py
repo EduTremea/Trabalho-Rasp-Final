@@ -20,8 +20,10 @@ COLABORADORES = [
 app = create_app()
 with app.app_context():
     db = get_db()
+    # Cria o admin ou redefine a senha dele para a do config.py
     db.execute(
-        "INSERT OR IGNORE INTO usuarios (usuario, senha_hash) VALUES (?, ?)",
+        "INSERT INTO usuarios (usuario, senha_hash) VALUES (?, ?) "
+        "ON CONFLICT(usuario) DO UPDATE SET senha_hash = excluded.senha_hash",
         (config.ADMIN_USUARIO, generate_password_hash(config.ADMIN_SENHA)),
     )
     for c in COLABORADORES:

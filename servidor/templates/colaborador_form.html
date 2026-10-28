@@ -6,7 +6,7 @@
   <label>Nome <input name="nome" value="{{ c.nome if c else '' }}" required></label>
   <label>Matrícula <input name="matricula" value="{{ c.matricula if c else '' }}" required></label>
   <label>Tag RFID
-    <input name="tag_rfid" value="{{ c.tag_rfid or '' if c else '' }}" placeholder="ID impresso pela Raspberry ao ler o crachá">
+    <input name="tag_rfid" value="{{ (c.tag_rfid or '') if c else (tag or '') }}" placeholder="ID impresso pela Raspberry ao ler o crachá">
   </label>
   <label>Cargo / função <input name="cargo" value="{{ c.cargo or '' if c else '' }}"></label>
   <label class="check"><input type="checkbox" name="acesso_sala" {{ 'checked' if c and c.acesso_sala }}> Possui acesso à sala do projeto</label>
