@@ -183,8 +183,20 @@ class HardwareReal:
     # -- saidas --
     def lcd(self, linha1, linha2=""):
         print(f"[LCD] {linha1} / {linha2}")
-        if self.display:
-            self.display.clear()
+        if not self.display:
+            return
+        self.display.clear()
+        if getattr(config, "LCD_INVERTIDO", False):
+            # Display montado com os pinos para baixo: escreve de ponta-cabeca
+            import lcd_invertido
+            fis1, fis2, glifos = lcd_invertido.preparar(linha1, linha2)
+            for pos, desenho in glifos.items():
+                self.display.create_char(pos, desenho)
+            self.display.cursor_pos = (0, 0)
+            self.display.write_string(fis1)
+            self.display.cursor_pos = (1, 0)
+            self.display.write_string(fis2)
+        else:
             self.display.write_string(linha1[:16])
             self.display.crlf()
             self.display.write_string(linha2[:16])

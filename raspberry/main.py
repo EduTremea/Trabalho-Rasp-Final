@@ -105,7 +105,7 @@ class SalaSegura:
         # 1) Tag que nao esta no cadastro: possivel invasao
         if colab is None:
             print(f"Identificação não encontrada! (ID {tag})")
-            self.hw.lcd("ACESSO NEGADO", f"ID {tag[:13]}")
+            self.hw.lcd("ACESSO NEGADO", "Tag desconhecida")
             self.api.enviar({"data_hora": momento, "tipo": "invasao", "tag_rfid": tag})
             self.hw.piscar_vermelho_sirene()
             return
@@ -131,7 +131,7 @@ class SalaSegura:
             dur = int((datetime.now() - entrada).total_seconds())
             self.tempo_hoje[nome] = self.tempo_hoje.get(nome, 0) + dur
             print(f"Saída registrada: {nome} ({fmt(dur)} nesta visita, {fmt(self.tempo_hoje[nome])} hoje)")
-            self.hw.lcd(f"Ate logo, {primeiro}"[:16], f"hoje {fmt(self.tempo_hoje[nome])}")
+            self.hw.lcd("Ate logo,", primeiro[:16])
             self.api.enviar({"data_hora": momento, "tipo": "saida", "tag_rfid": tag,
                              "nome": nome, "duracao_segundos": dur})
             self._liberar()
