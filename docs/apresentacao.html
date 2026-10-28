@@ -64,9 +64,9 @@
 
 <section class="slide">
   <h1>A solução em uma frase</h1>
-  <p style="font-size:30px; max-width:1050px">Uma <strong>Raspberry Pi na porta</strong> lê o crachá, decide na hora com o cadastro em cache, dá retorno em LED, buzzer, display e fechadura, e manda cada evento para um <strong>servidor Flask</strong>, que alimenta o painel de gestão, o monitoramento da segurança e a análise em Pandas.</p>
+  <p style="font-size:30px; max-width:1050px">Uma <strong>Raspberry Pi na porta</strong> lê o crachá, decide na hora com o cadastro em cache, dá retorno em LEDs, buzzer e display, levanta a cancela e manda cada evento para um <strong>servidor Flask</strong>, que alimenta o painel de gestão, o monitoramento da segurança e a análise em Pandas.</p>
   <div class="cards">
-    <div class="card"><h3>raspberry/</h3><p>Leitura RFID, atuadores, PIR, botão, LDR, cache local e fila offline. Modo simulado para testes sem hardware.</p></div>
+    <div class="card"><h3>raspberry/</h3><p>Leitura RFID, LEDs, buzzer, LCD 16x2 e servo (cancela), cache local e fila offline. Modo simulado para testes sem hardware.</p></div>
     <div class="card verde"><h3>servidor/</h3><p>Flask + SQLite. API para a Rasp, login, CRUD de colaboradores, logs, monitoramento em tempo real, CSV.</p></div>
     <div class="card laranja"><h3>analise/</h3><p>Notebook Pandas lendo a API ou o CSV e respondendo as seis perguntas do enunciado.</p></div>
   </div>
@@ -85,9 +85,8 @@
     <rect x="35" y="124" width="88" height="34" rx="4" fill="#fff" stroke="#9ca3af"/><text x="79" y="145" text-anchor="middle">RFID RC522</text>
     <rect x="137" y="124" width="88" height="34" rx="4" fill="#fff" stroke="#9ca3af"/><text x="181" y="145" text-anchor="middle">LCD 16x2</text>
     <rect x="35" y="168" width="88" height="34" rx="4" fill="#fff" stroke="#9ca3af"/><text x="79" y="189" text-anchor="middle">LEDs + buzzer</text>
-    <rect x="137" y="168" width="88" height="34" rx="4" fill="#fff" stroke="#9ca3af"/><text x="181" y="189" text-anchor="middle">relé / servo</text>
-    <rect x="35" y="212" width="88" height="34" rx="4" fill="#fff" stroke="#9ca3af" stroke-dasharray="4 2"/><text x="79" y="233" text-anchor="middle">PIR · botão</text>
-    <rect x="137" y="212" width="88" height="34" rx="4" fill="#fff" stroke="#9ca3af" stroke-dasharray="4 2"/><text x="181" y="233" text-anchor="middle">LDR</text>
+    <rect x="137" y="168" width="88" height="34" rx="4" fill="#fff" stroke="#9ca3af"/><text x="181" y="189" text-anchor="middle">servo (cancela)</text>
+    <rect x="35" y="212" width="190" height="34" rx="4" fill="#fff" stroke="#9ca3af"/><text x="130" y="233" text-anchor="middle">potenciômetro (contraste do LCD)</text>
     <line x1="245" y1="70" x2="300" y2="70" stroke="#374151" stroke-width="2" marker-end="url(#s)"/>
     <line x1="300" y1="92" x2="245" y2="92" stroke="#374151" stroke-width="2" marker-end="url(#s)"/>
     <text x="272" y="60" text-anchor="middle" font-size="10">POST eventos</text>
@@ -126,33 +125,31 @@
   <h1>O que acontece na porta</h1>
   <table>
     <tr><th>Situação</th><th>LCD</th><th>Atuadores</th><th>Evento</th></tr>
-    <tr><td>Autorizado, 1ª vez no dia</td><td>Bem-vindo, {nome}</td><td>verde · 2 bipes agudos · fechadura 3 s</td><td><code>entrada</code></td></tr>
+    <tr><td>Autorizado, 1ª vez no dia</td><td>Bem-vindo, {nome}</td><td>verde · 2 bipes agudos · cancela abre 3 s</td><td><code>entrada</code></td></tr>
     <tr><td>Autorizado, já veio hoje</td><td>Bem-vindo de volta, {nome}</td><td>idem</td><td><code>entrada</code></td></tr>
     <tr><td>Autorizado, está dentro</td><td>Até logo + tempo do dia</td><td>idem</td><td><code>saida</code> + duração</td></tr>
     <tr><td>Cadastrado sem acesso</td><td>Sem acesso ao projeto</td><td>vermelho · bipe grave</td><td><code>acesso_negado</code></td></tr>
     <tr><td>Tag desconhecida</td><td>ACESSO NEGADO + ID</td><td>vermelho piscando · sirene</td><td><code>invasao</code></td></tr>
-    <tr><td>PIR com sala vazia</td><td>Movimento sem crachá</td><td>vermelho · 2 bipes</td><td><code>movimento_sem_cracha</code></td></tr>
-    <tr><td>Botão da porta</td><td>Chamando a segurança</td><td>3 bipes</td><td><code>campainha</code></td></tr>
   </table>
-  <p class="fonte" style="margin-top:14px">A mesma tag alterna entrada e saída. Leituras repetidas em menos de 3 s são ignoradas. O LDR informa se a sala está iluminada.</p>
+  <p class="fonte" style="margin-top:14px">A mesma tag alterna entrada e saída. Leituras repetidas em menos de 3 s são ignoradas. Negado e invasão não abrem a cancela.</p>
   <div class="rodape"><span>Sala Segura</span><span>5</span></div>
 </section>
 
 <section class="slide">
-  <h1>Hardware<small>Modo BOARD. RFID em 3,3 V; LCD, relé, PIR e LDR em 5 V</small></h1>
-  <div class="colunas">
+  <h1>Hardware montado<small>Raspberry Pi 4 · modo BOARD · RFID em 3,3 V, LCD e servo em 5 V</small></h1>
+  <div style="display:grid; grid-template-columns: 1.05fr 1fr; gap:32px; align-items:start">
     <table>
-      <tr><th>Componente</th><th>Pino</th></tr>
-      <tr><td>RFID SDA / SCK / MOSI / MISO / RST</td><td>24 / 23 / 19 / 21 / 22</td></tr>
-      <tr><td>LED verde / vermelho</td><td>11 / 13</td></tr>
-      <tr><td>Buzzer passivo (PWM)</td><td>12</td></tr>
-      <tr><td>Relé ou servo</td><td>15</td></tr>
-      <tr><td>PIR / botão / LDR</td><td>16 / 18 / 29</td></tr>
-      <tr><td>LCD I2C (SDA / SCL)</td><td>3 / 5</td></tr>
+      <tr><th>Componente</th><th>Pinos</th></tr>
+      <tr><td>RFID MFRC522 (SDA, SCK, MOSI, MISO, RST)</td><td>24, 23, 19, 21, 22</td></tr>
+      <tr><td>LED verde / LED vermelho</td><td>11 / 13</td></tr>
+      <tr><td>Buzzer (tons por PWM)</td><td>12</td></tr>
+      <tr><td>Servo SG90 (cancela)</td><td>15</td></tr>
+      <tr><td>LCD 1602A em 4 bits (RS, E, D4 a D7)</td><td>31, 33, 35, 37, 38, 40</td></tr>
+      <tr><td>Potenciômetro</td><td>VO do LCD (contraste)</td></tr>
     </table>
     <div>
-      <div class="caixa">Inserir aqui a foto da montagem real.</div>
-      <p class="fonte" style="margin-top:14px">Custo dos componentes do MVP: cerca de R$ 590 (Raspberry Pi 4 4 GB R$ 491,90 na MakerHero; demais módulos entre R$ 1,90 e R$ 29,90 na Eletrogate/Usinainfo, out/2026).</p>
+      <img src="imagens/montagem.jpg" style="width:100%; border-radius:8px; border:1px solid #e5e7eb">
+      <p class="fonte" style="margin:8px 0 0">Componentes com preço consultado (out/2026): Raspberry Pi 4 4 GB R$ 491,90 (MakerHero), kit RFID R$ 14,90, buzzer R$ 1,90 e protoboard R$ 8,90 (Eletrogate), servo SG90 R$ 17,33 (Usinainfo). Total cerca de R$ 535; LCD, potenciômetro, LEDs e jumpers vieram do kit da disciplina.</p>
     </div>
   </div>
   <div class="rodape"><span>Sala Segura</span><span>6</span></div>
@@ -219,11 +216,11 @@
   <h1>Roteiro da demonstração</h1>
   <ol style="font-size:24px; line-height:1.6">
     <li>Servidor no ar, painel aberto no monitoramento</li>
-    <li>Crachá autorizado: "Bem-vindo", verde, porta abre, aparece em "na sala"</li>
+    <li>Crachá autorizado: "Bem-vindo" no LCD, verde, cancela sobe, aparece em "na sala"</li>
     <li>Mesmo crachá de novo: saída com tempo de permanência</li>
     <li>Crachá cadastrado sem acesso: vermelho, bipe grave, alerta laranja</li>
     <li>Tag desconhecida: sirene, alerta vermelho de invasão</li>
-    <li>Desligar o Wi-Fi, passar dois crachás, religar: eventos chegam juntos, sem duplicar</li>
+    <li>Parar o servidor, passar dois crachás, subir de novo: eventos chegam juntos, sem duplicar</li>
     <li>Cadastrar um crachá novo no painel e usar na hora seguinte do sync</li>
     <li>Notebook: executar as células do dia da demo</li>
   </ol>
@@ -234,10 +231,10 @@
   <h1>O que falta para o produto final</h1>
   <div class="cards">
     <div class="card vermelho"><h3>Segurança</h3><p>HTTPS, chave por dispositivo, segundo fator (senha ou biometria), cartões MIFARE autenticados.</p></div>
-    <div class="card laranja"><h3>Operação</h3><p>Fechadura eletromagnética, sensor de porta, servidor dedicado com backup, várias portas.</p></div>
+    <div class="card laranja"><h3>Operação</h3><p>Fechadura eletromagnética no lugar do servo, sensor de porta e de presença, botão de chamada, servidor dedicado com backup, várias portas.</p></div>
     <div class="card verde"><h3>Gestão</h3><p>Perfis de usuário, trilha de auditoria, integração com RH, notificações, retenção de logs (LGPD).</p></div>
   </div>
-  <p style="margin-top:40px; font-size:24px">Repositório: <code>github.com/&lt;grupo&gt;/sala-segura</code></p>
+  <p style="margin-top:40px; font-size:24px">Repositório: <code>github.com/EduTremea/Trabalho-Rasp-Final</code></p>
   <div class="rodape"><span>Sala Segura</span><span>12</span></div>
 </section>
 

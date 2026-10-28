@@ -13,7 +13,7 @@
   table { border-collapse: collapse; width: 100%; margin: 6px 0 10px; font-size: 9.5pt; page-break-inside: avoid; }
   th, td { border: 1px solid #d1d5db; padding: 4px 7px; text-align: left; vertical-align: top; }
   th { background: #f3f4f6; }
-  td.num { text-align: right; white-space: nowrap; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
   .capa { text-align: center; padding-top: 140px; page-break-after: always; }
   .capa .sub { color: #6b7280; font-size: 13pt; margin-top: 6px; }
   .capa .meta { margin-top: 60px; color: #374151; }
@@ -52,7 +52,7 @@
 <p class="fonte">Divisão sugerida a partir da estrutura do repositório. Ajustar conforme a divisão real do grupo.</p>
 
 <h2>2. Sumário executivo</h2>
-<p>Um estúdio de jogos precisa restringir e auditar o acesso a uma sala onde ficam materiais de uma publisher sob NDA. O Sala Segura resolve isso com um leitor RFID ligado a uma Raspberry Pi na porta, que valida o crachá, aciona LEDs, buzzer, display e fechadura, e envia cada evento para um servidor Flask. O servidor concentra os dados em um banco SQLite, oferece um painel para cadastrar colaboradores e permissões, uma página de monitoramento para a empresa de segurança e uma exportação em CSV/API que alimenta a análise em Pandas. A Raspberry continua validando acessos mesmo sem rede, usando um cache local, e sincroniza os registros quando a conexão volta.</p>
+<p>Um estúdio de jogos precisa restringir e auditar o acesso a uma sala onde ficam materiais de uma publisher sob NDA. O Sala Segura resolve isso com um leitor RFID ligado a uma Raspberry Pi na porta, que valida o crachá, aciona LEDs, buzzer e display, levanta uma cancela (servo) e envia cada evento para um servidor Flask. O servidor concentra os dados em um banco SQLite, oferece um painel para cadastrar colaboradores e permissões, uma página de monitoramento para a empresa de segurança e uma exportação em CSV/API que alimenta a análise em Pandas. A Raspberry continua validando acessos mesmo sem rede, usando um cache local, e sincroniza os registros quando a conexão volta.</p>
 
 <h2>3. Objetivo geral</h2>
 <p>Controlar fisicamente quem entra na sala do projeto e registrar todas as tentativas de acesso, autorizadas ou não, de forma que o estúdio consiga comprovar à publisher o cumprimento do NDA e investigar qualquer incidente.</p>
@@ -76,7 +76,7 @@
 <p>O MVP cobre o fluxo completo em escala de bancada, com uma porta e três módulos de software:</p>
 <table>
   <tr><th>Módulo</th><th>Tecnologia</th><th>O que faz</th></tr>
-  <tr><td><code>raspberry/</code></td><td>Python, RPi.GPIO, mfrc522, RPLCD, requests</td><td>Lê o crachá, valida pelo cache, aciona LEDs/buzzer/LCD/fechadura, trata PIR, botão e LDR, envia eventos e mantém fila offline. Tem modo <code>--simular</code> que roda sem hardware.</td></tr>
+  <tr><td><code>raspberry/</code></td><td>Python, RPi.GPIO, mfrc522, RPLCD, requests</td><td>Lê o crachá, valida pelo cache, aciona LEDs, buzzer, LCD 16x2 e o servo da cancela, envia eventos e mantém fila offline. Tem modo <code>--simular</code> que roda sem hardware.</td></tr>
   <tr><td><code>servidor/</code></td><td>Flask, SQLite, Jinja, JS (polling)</td><td>API para a Rasp (sync, eventos, heartbeat), login, CRUD de colaboradores, logs com filtro, monitoramento em tempo real e exportação CSV.</td></tr>
   <tr><td><code>analise/</code></td><td>Pandas, Matplotlib, Jupyter</td><td>Lê a API ou o CSV e responde as seis perguntas do enunciado, com gráficos por dia e por hora.</td></tr>
 </table>
@@ -101,15 +101,11 @@
   <tr><th>Item</th><th>Loja consultada (out/2026)</th><th class="num">Preço</th></tr>
   <tr><td>Raspberry Pi 4 Model B 4 GB</td><td>MakerHero ("a partir de")</td><td class="num">R$ 491,90</td></tr>
   <tr><td>Kit leitor RFID MFRC522 + cartão + chaveiro</td><td>Eletrogate</td><td class="num">R$ 14,90</td></tr>
-  <tr><td>Display LCD 16x2 com I2C</td><td>Eletrogate</td><td class="num">R$ 29,90</td></tr>
-  <tr><td>Módulo relé 5 V 1 canal</td><td>Eletrogate</td><td class="num">R$ 7,50</td></tr>
-  <tr><td>Micro servo SG90 (alternativa ao relé)</td><td>Usinainfo</td><td class="num">R$ 17,33</td></tr>
-  <tr><td>Sensor de presença PIR HC-SR501</td><td>Eletrogate</td><td class="num">R$ 11,90</td></tr>
-  <tr><td>Módulo sensor de luminosidade LDR</td><td>Eletrogate</td><td class="num">R$ 5,90</td></tr>
+  <tr><td>Micro servo SG90 (cancela)</td><td>Usinainfo</td><td class="num">R$ 17,33</td></tr>
   <tr><td>Buzzer passivo 5 V</td><td>Eletrogate</td><td class="num">R$ 1,90</td></tr>
   <tr><td>Protoboard 400 pontos</td><td>Eletrogate</td><td class="num">R$ 8,90</td></tr>
-  <tr><td>LEDs, resistores, botão e jumpers</td><td>já disponíveis no kit da disciplina</td><td class="num">—</td></tr>
-  <tr><th colspan="2">Total aproximado do MVP (com relé e servo)</th><th class="num">R$ 590,13</th></tr>
+  <tr><td>Display LCD 1602A, potenciômetro, LEDs, resistores e jumpers</td><td>já disponíveis no kit da disciplina</td><td class="num">—</td></tr>
+  <tr><th colspan="2">Total aproximado do MVP</th><th class="num">R$ 534,93</th></tr>
 </table>
 <p class="fonte">Não estão incluídos cartão microSD, fonte e o computador que roda o servidor, que o grupo já possui. Os preços variam por loja e estoque; a Raspberry Pi 4 4 GB apareceu também a R$ 944,84 na NextPi, fora de estoque.</p>
 
@@ -129,10 +125,8 @@
   <rect x="35" y="140" width="88" height="34" rx="4" fill="#fff" stroke="#9ca3af"/><text x="79" y="161" text-anchor="middle">RFID RC522</text>
   <rect x="137" y="140" width="88" height="34" rx="4" fill="#fff" stroke="#9ca3af"/><text x="181" y="161" text-anchor="middle">LCD 16x2</text>
   <rect x="35" y="184" width="88" height="34" rx="4" fill="#fff" stroke="#9ca3af"/><text x="79" y="205" text-anchor="middle">LEDs + buzzer</text>
-  <rect x="137" y="184" width="88" height="34" rx="4" fill="#fff" stroke="#9ca3af"/><text x="181" y="205" text-anchor="middle">relé / servo</text>
-  <rect x="35" y="228" width="88" height="34" rx="4" fill="#fff" stroke="#9ca3af" stroke-dasharray="4 2"/><text x="79" y="249" text-anchor="middle">PIR · botão</text>
-  <rect x="137" y="228" width="88" height="34" rx="4" fill="#fff" stroke="#9ca3af" stroke-dasharray="4 2"/><text x="181" y="249" text-anchor="middle">LDR</text>
-  <text x="130" y="290" text-anchor="middle" fill="#6b7280" font-size="10">tracejado = opcional</text>
+  <rect x="137" y="184" width="88" height="34" rx="4" fill="#fff" stroke="#9ca3af"/><text x="181" y="205" text-anchor="middle">servo (cancela)</text>
+  <rect x="35" y="228" width="190" height="34" rx="4" fill="#fff" stroke="#9ca3af"/><text x="130" y="249" text-anchor="middle">potenciômetro (contraste do LCD)</text>
   <!-- HTTP -->
   <line x1="245" y1="90" x2="300" y2="90" stroke="#374151" stroke-width="2" marker-end="url(#seta)"/>
   <line x1="300" y1="110" x2="245" y2="110" stroke="#374151" stroke-width="2" marker-end="url(#seta)"/>
@@ -176,7 +170,7 @@
 <ol>
   <li>O MFRC522 entrega o ID da tag. Leituras repetidas em menos de 3 s são ignoradas.</li>
   <li>O ID é procurado no cache local (<code>cache_colaboradores.json</code>), baixado de <code>GET /api/sync</code> ao ligar e a cada 60 s.</li>
-  <li>Tag desconhecida gera <code>invasao</code>; cadastrado sem permissão gera <code>acesso_negado</code>; autorizado gera <code>entrada</code> ou <code>saida</code>, alternando a cada leitura. A saída carrega a duração da visita e o LCD mostra o total do dia.</li>
+  <li>Tag desconhecida gera <code>invasao</code>; cadastrado sem permissão gera <code>acesso_negado</code>; autorizado gera <code>entrada</code> ou <code>saida</code>, alternando a cada leitura. A saída carrega a duração da visita e o LCD mostra o total do dia. Entradas e saídas autorizadas levantam a cancela por 3 s; acesso negado e invasão mantêm a cancela fechada.</li>
   <li>O evento vai por <code>POST /api/eventos</code>. Se falhar, entra em <code>fila_offline.json</code> e é reenviado no próximo heartbeat bem-sucedido. O servidor tem chave única (data_hora, tipo, tag) e descarta duplicatas.</li>
   <li>O servidor resolve o colaborador pela tag, grava em <code>eventos</code> e a página de monitoramento reflete em até 3 s.</li>
 </ol>
@@ -193,17 +187,16 @@
   <tr><td>RFID SDA / SCK / MOSI / MISO / RST</td><td>24 / 23 / 19 / 21 / 22</td><td>SPI; alimentação em 3,3 V (pino 1), GND pino 6</td></tr>
   <tr><td>LED verde / LED vermelho</td><td>11 / 13</td><td>resistor 220 a 330 Ω</td></tr>
   <tr><td>Buzzer passivo</td><td>12</td><td>PWM por software, tons diferentes por evento</td></tr>
-  <tr><td>Relé ou servo (fechadura)</td><td>15</td><td>relé ativo em nível baixo; servo em 5 V</td></tr>
-  <tr><td>PIR (OUT) / botão / LDR (DO)</td><td>16 / 18 / 29</td><td>opcionais; botão para GND com pull-up interno</td></tr>
-  <tr><td>LCD 16x2 I2C</td><td>3 (SDA) / 5 (SCL)</td><td>endereço 0x27 ou 0x3F</td></tr>
+  <tr><td>Servo SG90 (cancela)</td><td>15</td><td>sinal no pino 15, alimentação em 5 V; 0° fechada, 90° aberta</td></tr>
+  <tr><td>LCD 1602A (4 bits): RS / E / D4 / D5 / D6 / D7</td><td>31 / 33 / 35 / 37 / 38 / 40</td><td>VDD e BLA em 5 V, GND, RW e BLK no GND, VO no potenciômetro (contraste)</td></tr>
 </table>
 
 <h2>11. Imagens do MVP</h2>
-<div class="alerta">Inserir aqui as fotos reais da montagem (Raspberry, protoboard, leitor e display) antes de gerar o PDF final.</div>
-<figure><img src="imagens/tela_monitoramento.png" alt="Monitoramento"><figcaption>Figura 2. Página de monitoramento para a empresa de segurança, com dados de teste.</figcaption></figure>
+<figure><img src="imagens/montagem.jpg" alt="Montagem" style="max-height:330px"><figcaption>Figura 2. MVP montado: Raspberry Pi 4, leitor RFID, LCD 1602A com potenciômetro, LEDs, buzzer e servo da cancela.</figcaption></figure>
+<figure><img src="imagens/tela_monitoramento.png" alt="Monitoramento"><figcaption>Figura 3. Página de monitoramento para a empresa de segurança, com dados de teste.</figcaption></figure>
 <div class="duas">
-  <figure><img src="imagens/tela_colaboradores.png" alt="Colaboradores"><figcaption>Figura 3. Gestão de colaboradores e permissões.</figcaption></figure>
-  <figure><img src="imagens/tela_logs.png" alt="Logs"><figcaption>Figura 4. Logs com filtro por data e tipo e exportação CSV.</figcaption></figure>
+  <figure><img src="imagens/tela_colaboradores.png" alt="Colaboradores"><figcaption>Figura 4. Gestão de colaboradores e permissões.</figcaption></figure>
+  <figure><img src="imagens/tela_logs.png" alt="Logs"><figcaption>Figura 5. Logs com filtro por data e tipo e exportação CSV.</figcaption></figure>
 </div>
 
 <h2>12. Principais riscos e o que falta para a versão completa</h2>
@@ -211,10 +204,10 @@
   <tr><th>Risco / lacuna</th><th>Impacto</th><th>Mitigação ou próximo passo</th></tr>
   <tr><td>Crachá clonado ou emprestado</td><td>Acesso indevido com registro em nome de outra pessoa</td><td>Segundo fator (senha ou biometria) e cartões MIFARE com autenticação, como nos produtos comerciais.</td></tr>
   <tr><td>Tráfego HTTP sem criptografia e chave de API fixa</td><td>Eventos podem ser forjados na rede local</td><td>HTTPS com certificado, chave por dispositivo, rede segregada.</td></tr>
-  <tr><td>Saída sem passar o crachá</td><td>Tempo de permanência errado e "fantasmas" na sala</td><td>Sensor de porta e PIR interno para fechar a visita automaticamente; alerta ao gestor.</td></tr>
+  <tr><td>Saída sem passar o crachá</td><td>Tempo de permanência errado e "fantasmas" na sala</td><td>Sensor de porta e sensor de presença interno (fora do MVP) para fechar a visita automaticamente; alerta ao gestor.</td></tr>
   <tr><td>Servidor único em um notebook</td><td>Fica sem monitoramento e sem histórico se o notebook desligar</td><td>Servidor dedicado ou nuvem, backup diário do banco, PostgreSQL.</td></tr>
   <tr><td>Dados pessoais (nome, matrícula, horários)</td><td>Obrigações da LGPD</td><td>Perfis de acesso, trilha de auditoria, política de retenção dos logs.</td></tr>
-  <tr><td>Equipe e equipamento</td><td>Uma porta só, componentes de bancada</td><td>Fechadura eletromagnética, caixa para o módulo, cabeamento e um desenvolvedor dedicado por 2 a 3 meses para os itens acima.</td></tr>
+  <tr><td>Equipe e equipamento</td><td>Uma porta só, componentes de bancada</td><td>Fechadura eletromagnética no lugar do servo, botão de chamada da segurança, caixa para o módulo, cabeamento e um desenvolvedor dedicado por 2 a 3 meses para os itens acima.</td></tr>
 </table>
 
 <h2>Referências</h2>
