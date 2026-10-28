@@ -4,7 +4,7 @@ Troque SERVIDOR_URL pelo IP do notebook que roda o Flask.
 """
 
 # ---------- Servidor ----------
-SERVIDOR_URL = "http://192.168.0.100:5000"   # IP do computador com o Flask
+SERVIDOR_URL = "http://10.1.25.107:5000"     # IP do computador com o Flask
 API_KEY = "rasp-sala-2026"                   # mesmo valor de servidor/config.py
 TIMEOUT_HTTP = 3                             # segundos; acima disso considera offline
 INTERVALO_HEARTBEAT = 10                     # segundos
